@@ -1,0 +1,12 @@
+services:
+  banco:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: "relogio_ponto"
+    ports:
+      - "3306:3306"  
+    volumes:
+      - data_mysql8:/var/lib/mysql  
+volumes:
+  data_mysql8:      
