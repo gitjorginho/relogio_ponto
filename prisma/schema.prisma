@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  EMPLOYEE
+}
+
+enum RecordType {
+  CLOCK_IN
+  BREAK_START
+  BREAK_END
+  CLOCK_OUT
+}
+
+enum RecordSource {
+  WEB
+  MOBILE
+  API
+  MANUAL
+}
+
+model User {
+  id           String    @id @default(uuid())
+  name         String
+  email        String    @unique
+  password     String
+  role         Role      @default(EMPLOYEE)
+  registration String?   @unique
+  document     String?   @unique
+  department   String?
+  position     String?
+  phone        String?
+  active       Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  schedule    WorkSchedule?
+  timeRecords TimeRecord[]
+
+  @@index([active])
+  @@index([department])
+  @@map("users")
+}
+
+model WorkSchedule {
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  startTime        String   @default("08:00")
+  endTime          String   @default("17:00")
+  breakMinutes     Int      @default(60)
+  workdays         String   @default("1,2,3,4,5")
+  toleranceMinutes Int      @default(10)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("work_schedules")
+}
+
+model TimeRecord {
+  id           String       @id @default(uuid())
+  userId       String
+  type         RecordType
+  recordedAt   DateTime     @default(now())
+  source       RecordSource @default(WEB)
+  latitude     Float?
+  longitude    Float?
+  accuracy     Float?
+  ipAddress    String?
+  device       String?
+  notes        String?      @db.Text
+  voided       Boolean      @default(false)
+  voidedReason String?
+  voidedAt     DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, recordedAt])
+  @@index([recordedAt])
+  @@index([voided])
+  @@map("time_records")
+}
